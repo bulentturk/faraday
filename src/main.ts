@@ -8,6 +8,8 @@ import type { Sound } from "./music/melody";
 import { renderMidi } from "./music/midi";
 import { renderMelodyRoll } from "./music/roll";
 import { MelodyPlayer } from "./music/player";
+import { createWallStore } from "./wall/store";
+import type { Mystery, WallStore } from "./wall/store";
 
 const inputEl = document.querySelector<HTMLTextAreaElement>("#input")!;
 const outputEl = document.querySelector<HTMLTextAreaElement>("#output")!;
@@ -32,6 +34,114 @@ const bpmEl = document.querySelector<HTMLSelectElement>("#bpm")!;
 const playBtn = document.querySelector<HTMLButtonElement>("#playBtn")!;
 
 const player = new MelodyPlayer();
+const wallStore: WallStore = createWallStore();
+const wallList = document.querySelector<HTMLElement>("#wallList")!;
+const wallStatus = document.querySelector<HTMLElement>("#wallStatus")!;
+const pinBtn = document.querySelector<HTMLButtonElement>("#pinBtn")!;
+
+let wallCache: Mystery[] = [];
+
+function escHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+const CIPHER_NAMES: Record<string, string> = Object.fromEntries(
+  CIPHERS.map((c) => [c.id, c.name]),
+);
+
+function mysteryCard(m: Mystery): string {
+  const date = new Date(m.createdAt).toLocaleDateString("tr-TR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  const seal = renderSeal({
+    ciphertext: m.ciphertext,
+    cipherName: CIPHER_NAMES[m.cipherId] ?? m.cipherId,
+    hint: m.hint === "" ? undefined : m.hint,
+    date,
+  });
+  return `<article class="wall-card" data-id="${escHtml(m.id)}">
+      <div class="wall-seal">${seal}</div>
+      <div class="wall-meta">
+        <strong>${escHtml(CIPHER_NAMES[m.cipherId] ?? m.cipherId)}</strong>
+        <span>${escHtml(date)} · ${m.solverCount} çözüm</span>
+        ${m.hint === "" ? "" : `<p class="wall-hint">ipucu: ${escHtml(m.hint)}</p>`}
+        <div class="wall-solve">
+          <input type="text" class="wall-key" placeholder="Anahtar dene…" />
+          <button type="button" class="btn ghost wall-try">Dene</button>
+          <button type="button" class="btn wall-solved">Çözüldü!</button>
+        </div>
+        <div class="wall-result"></div>
+      </div>
+    </article>`;
+}
+
+async function renderWall(): Promise<void> {
+  try {
+    wallCache = await wallStore.list();
+    wallStatus.textContent =
+      wallStore.mode === "local"
+        ? "Yerel duvar: vakalar şu an bu tarayıcıda saklanıyor."
+        : "Ortak duvar: herkesin vakaları.";
+    wallList.innerHTML = wallCache.map(mysteryCard).join("");
+  } catch (err) {
+    wallStatus.textContent = err instanceof Error ? err.message : "Duvar yüklenemedi.";
+  }
+}
+
+wallList.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return;
+  const card = target.closest<HTMLElement>(".wall-card");
+  if (card === null) return;
+  const mystery = wallCache.find((m) => m.id === card.dataset.id);
+  if (mystery === undefined) return;
+  const resultEl = card.querySelector<HTMLElement>(".wall-result");
+
+  if (target.classList.contains("wall-try")) {
+    const input = card.querySelector<HTMLInputElement>(".wall-key");
+    const key = input?.value ?? "";
+    try {
+      const plain = transform(mystery.ciphertext, mystery.cipherId, key, "decrypt");
+      if (resultEl !== null) {
+        resultEl.textContent = `deneme: ${plain}`;
+      }
+    } catch (err) {
+      if (resultEl !== null) {
+        resultEl.textContent = err instanceof Error ? err.message : "Anahtar çalışmadı.";
+      }
+    }
+  }
+
+  if (target.classList.contains("wall-solved")) {
+    void wallStore.markSolved(mystery.id).then(renderWall);
+  }
+});
+
+pinBtn.addEventListener("click", () => {
+  const text = inputEl.value.trim();
+  if (text === "") {
+    errorEl.hidden = false;
+    errorEl.textContent = "Önce bir mesaj yaz, sonra duvara as.";
+    return;
+  }
+  const info = currentInfo();
+  const ciphertext =
+    state.mode === "encrypt" ? transform(text, info.id, keyEl.value, "encrypt") : text;
+  void wallStore
+    .add({ ciphertext, cipherId: info.id, hint: hintEl.value.trim() })
+    .then(() => renderWall())
+    .then(() => {
+      document.querySelector(".wall")?.scrollIntoView({ behavior: "smooth" });
+    });
+});
+
+void renderWall();
 
 const state: { mode: Direction; cipher: CipherId } = {
   mode: "encrypt",

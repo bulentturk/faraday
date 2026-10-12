@@ -328,3 +328,74 @@ select:focus {
   font-size: 14px;
   margin: 4px 0 0;
 }
+
+.wall {
+  grid-column: 1 / -1;
+}
+
+.wall-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.wall-card {
+  background: #120e09;
+  border: 1px solid var(--panel-edge);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.wall-seal svg {
+  width: 100%;
+  max-width: 180px;
+  display: block;
+  margin: 0 auto 10px;
+}
+
+.wall-meta strong {
+  display: block;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-size: 13px;
+  color: var(--gold);
+}
+
+.wall-meta span {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.wall-hint {
+  color: var(--ink);
+  font-size: 13.5px;
+  font-style: italic;
+  margin: 8px 0;
+}
+
+.wall-solve {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.wall-solve input {
+  flex: 1;
+  min-width: 120px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.wall-solve .btn {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.wall-result {
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: var(--gold);
+  word-break: break-word;
+}
