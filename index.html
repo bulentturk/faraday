@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MÜHÜRHANE · Sırlı Mühür Atölyesi</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <p class="kicker">tarih · kriptoloji · el sanatı</p>
+      <h1>MÜHÜR<span>HANE</span></h1>
+      <p class="tagline">
+        Mesajını antik bir şifreyle mühürle. Ardından mühür, scytale şeridi ve Alberti
+        şifre diski olarak yanına al — dijital sır, elle çözülür.
+      </p>
+    </header>
+
+    <main>
+      <section class="panel">
+        <div class="mode-toggle">
+          <button id="modeEncrypt" class="mode active" type="button">Mühürle</button>
+          <button id="modeDecrypt" class="mode" type="button">Çöz</button>
+        </div>
+
+        <label id="inputLabel" for="input">Mesaj</label>
+        <textarea id="input" rows="5" placeholder="Gizlenecek mesajı yaz…"></textarea>
+
+        <div class="field-label">Şifre</div>
+        <div id="cipherList" class="cipher-list"></div>
+
+        <div class="key-row">
+          <div>
+            <label id="keyLabel" for="key">Anahtar</label>
+            <input id="key" type="text" autocomplete="off" />
+            <small id="keyHelp"></small>
+          </div>
+          <div>
+            <label for="hint">Anahtar ipucu (mühürde görünür)</label>
+            <input id="hint" type="text" placeholder="örn. kütüphanedeki üçüncü kitap" />
+            <small>Alıcı bu ipucuyla anahtarı bulur; mesajın kendisi mühürde şifreli kalır.</small>
+          </div>
+        </div>
+
+        <p id="error" class="error" hidden></p>
+      </section>
+
+      <section class="panel">
+        <h2 id="outputLabel">Şifreli metin</h2>
+        <div class="output-row">
+          <textarea id="output" rows="4" readonly></textarea>
+          <button id="copyBtn" class="btn ghost" type="button">Kopyala</button>
+        </div>
+
+        <h2>Mühür</h2>
+        <div id="sealPreview" class="preview"></div>
+
+        <div class="actions">
+          <button id="dlSeal" class="btn primary" type="button">Mührü indir (SVG)</button>
+          <button id="dlStrip" class="btn" type="button">Scytale şeridini indir</button>
+          <button id="dlDisk" class="btn" type="button">Alberti diskini indir</button>
+          <button id="printBtn" class="btn ghost" type="button">Yazdır / PDF</button>
+        </div>
+
+        <h2>Müzik</h2>
+        <p class="note">Mesajın harfleri notaya, dilinin ritmi vuruşa dönüşür — Bach'ın B-A-C-H şifresi gibi.</p>
+        <div class="key-row">
+          <div>
+            <label for="scale">Gam</label>
+            <select id="scale"></select>
+            <small>Minör pentatonik en uyumlu sonucu verir.</small>
+          </div>
+          <div>
+            <label for="bpm">Tempo</label>
+            <select id="bpm">
+              <option value="72">72 BPM — ağır</option>
+              <option value="96" selected>96 BPM — orta</option>
+              <option value="120">120 BPM — canlı</option>
+            </select>
+            <small>MIDI dosyası da bu tempoyla kaydedilir.</small>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="playBtn" class="btn primary" type="button">Dinle</button>
+          <button id="dlMidi" class="btn" type="button">MIDI indir</button>
+        </div>
+        <div id="rollPreview" class="preview wide"></div>
+
+        <details>
+          <summary>Fiziksel şifre aletleri</summary>
+          <div id="stripPreview" class="preview wide"></div>
+          <div id="diskPreview" class="preview"></div>
+        </details>
+      </section>
+    </main>
+
+    <footer>
+      <p>MÜHÜRHANE — sırlarını yaz, mühürle, yanına al. Yakında: mesajını melodiye çeviren müzik modülü.</p>
+    </footer>
+
+    <div id="printArea"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
