@@ -92,6 +92,25 @@
           <div id="diskPreview" class="preview"></div>
         </details>
       </section>
+      <section class="panel sky">
+        <h2>Gökyüzü Anahtarı</h2>
+        <p class="note">
+          Loncaya göre anahtar akılda tutulmaz; gökyüzünde doğar. Doğum tarihin,
+          sana ait şifre geleneğini ve yıldız mührünü belirler.
+        </p>
+        <div class="key-row">
+          <div>
+            <label for="birthDate">Doğum tarihin</label>
+            <input id="birthDate" type="date" />
+          </div>
+          <div class="sky-action">
+            <label>&nbsp;</label>
+            <button id="skyBtn" class="btn primary" type="button">Yıldızını oku</button>
+          </div>
+        </div>
+        <div id="skyResult" class="sky-result"></div>
+      </section>
+
       <section class="panel wall">
         <h2>Gizem Duvarı</h2>
         <p class="note">
@@ -100,6 +119,16 @@
         </p>
         <p id="wallStatus" class="note"></p>
         <div id="wallList" class="wall-list"></div>
+      </section>
+
+      <section class="panel lore">
+        <h2>Lonca Arşivi</h2>
+        <p class="note">
+          Kayıp Mühürcüler Loncası'nın hikâyesi. Her ürettiğin eser (indirdiğin mühür,
+          şerit, disk, melodi ya da duvara astığın vaka) yeni bir bölümü açar.
+        </p>
+        <p id="loreProgress" class="note"></p>
+        <div id="loreList" class="lore-list"></div>
       </section>
     </main>
 

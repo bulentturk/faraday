@@ -2,11 +2,19 @@
 
 import { hashString, mulberry32 } from "./rng";
 
+export interface SealSky {
+  symbol: string;
+  sign: string;
+  planet: string;
+}
+
 export interface SealOptions {
   ciphertext: string;
   cipherName: string;
   hint?: string;
   date?: string;
+  sky?: SealSky;
+  secretLine?: string;
 }
 
 const INK = "#241b12";
@@ -68,7 +76,7 @@ function sigil(rand: () => number, maxR: number): string {
 }
 
 export function renderSeal(options: SealOptions): string {
-  const { ciphertext, cipherName, hint, date } = options;
+  const { ciphertext, cipherName, hint, date, sky, secretLine } = options;
   const rand = mulberry32(hashString(`${ciphertext}|${cipherName}|${hint ?? ""}`));
 
   const ring =
@@ -77,7 +85,7 @@ export function renderSeal(options: SealOptions): string {
       : ciphertext.toLocaleUpperCase("tr-TR").replace(/\s+/g, " ");
   const ringTextShort = ring.length > 150 ? `${ring.slice(0, 149)}…` : ring;
 
-  const metaParts = [cipherName, date ?? "", hint ? `ipucu: ${hint}` : ""].filter((p) => p !== "");
+  const metaParts = [cipherName, sky ? `${sky.sign} · ${sky.planet}` : "", date ?? "", hint ? `ipucu: ${hint}` : ""].filter((p) => p !== "");
   const meta = metaParts.join(" · ").toLocaleUpperCase("tr-TR");
 
   const dots: string[] = [];
@@ -98,6 +106,17 @@ export function renderSeal(options: SealOptions): string {
   ${ringText("inner", 240, meta, 15, RED)}
   <circle cx="400" cy="400" r="196" fill="none" stroke="${INK}" stroke-width="1.2" opacity="0.6"/>
   ${sigil(rand, 170)}
+  ${
+    sky === undefined
+      ? ""
+      : `<circle cx="400" cy="400" r="64" fill="${PAPER}" stroke="${RED}" stroke-width="2.5"/>
+  <text x="400" y="400" dy="24" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="72" fill="${RED}">${esc(sky.symbol)}</text>`
+  }
+  ${
+    secretLine === undefined || secretLine === ""
+      ? ""
+      : `<text x="400" y="702" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="12.5" font-style="italic" opacity="0.7" fill="${INK}">${esc(secretLine)}</text>`
+  }
   <text x="400" y="672" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="17" letter-spacing="6" fill="${INK}">MÜHÜRHANE</text>
 </svg>`;
 }

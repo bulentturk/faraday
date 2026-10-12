@@ -10,6 +10,15 @@ import { renderMelodyRoll } from "./music/roll";
 import { MelodyPlayer } from "./music/player";
 import { createWallStore } from "./wall/store";
 import type { Mystery, WallStore } from "./wall/store";
+import { skyProfileFromBirth } from "./sky";
+import type { SkyProfile } from "./sky";
+import {
+  GUILD_STORY,
+  remainingForNext,
+  requiredArtifacts,
+  secretLineFor,
+  unlockedFragments,
+} from "./lore";
 
 const inputEl = document.querySelector<HTMLTextAreaElement>("#input")!;
 const outputEl = document.querySelector<HTMLTextAreaElement>("#output")!;
@@ -38,8 +47,65 @@ const wallStore: WallStore = createWallStore();
 const wallList = document.querySelector<HTMLElement>("#wallList")!;
 const wallStatus = document.querySelector<HTMLElement>("#wallStatus")!;
 const pinBtn = document.querySelector<HTMLButtonElement>("#pinBtn")!;
+const birthDate = document.querySelector<HTMLInputElement>("#birthDate")!;
+const skyBtn = document.querySelector<HTMLButtonElement>("#skyBtn")!;
+const skyResult = document.querySelector<HTMLElement>("#skyResult")!;
+const loreList = document.querySelector<HTMLElement>("#loreList")!;
+const loreProgress = document.querySelector<HTMLElement>("#loreProgress")!;
 
 let wallCache: Mystery[] = [];
+let skyProfile: SkyProfile | null = null;
+
+const LORE_KEY = "muhurhane-artifacts";
+
+function artifactCount(): number {
+  return Number.parseInt(globalThis.localStorage.getItem(LORE_KEY) ?? "0", 10) || 0;
+}
+
+function addArtifact(): void {
+  globalThis.localStorage.setItem(LORE_KEY, String(artifactCount() + 1));
+  renderLore();
+}
+
+function renderLore(): void {
+  const count = artifactCount();
+  const open = unlockedFragments(count);
+  const remaining = remainingForNext(count);
+  loreProgress.textContent =
+    `Lonca arşivi: ${open.length}/${GUILD_STORY.length} bölüm açıldı` +
+    (remaining > 0 ? ` · sonraki bölüm için ${remaining} eser daha` : " · tüm bölümler açık");
+  loreList.innerHTML = GUILD_STORY.map((fragment, i) => {
+    const unlocked = count >= requiredArtifacts(i);
+    return `<article class="lore-fragment${unlocked ? "" : " locked"}">
+        <h3>${unlocked ? escHtml(fragment.title) : `Bölüm ${i + 1} — mühürlü`}</h3>
+        <p>${
+          unlocked
+            ? escHtml(fragment.text)
+            : `Bu bölüm ${requiredArtifacts(i)} eser üretildiğinde açılır.`
+        }</p>
+      </article>`;
+  }).join("");
+}
+
+function renderSky(): void {
+  if (skyProfile === null) return;
+  const profile = skyProfile;
+  const cipherName = CIPHER_NAMES[profile.cipherId] ?? profile.cipherId;
+  skyResult.innerHTML = `<div class="sky-card">
+      <div class="sky-symbol">${escHtml(profile.symbol)}</div>
+      <div class="sky-info">
+        <strong>${escHtml(profile.sign)}</strong>
+        <span>${escHtml(profile.element)} elementi · yönetici ${escHtml(profile.planet)}</span>
+        <p class="sky-motto">“${escHtml(profile.motto)}”</p>
+        <span>Gelenek: ${escHtml(cipherName)} · anahtar: ${
+          profile.cipherKey === "" ? "gerekmez" : escHtml(profile.cipherKey)
+        }</span>
+        <div class="actions">
+          <button id="applySkyKey" class="btn primary" type="button">Anahtarı uygula</button>
+        </div>
+      </div>
+    </div>`;
+}
 
 function escHtml(value: string): string {
   return value
@@ -64,6 +130,7 @@ function mysteryCard(m: Mystery): string {
     cipherName: CIPHER_NAMES[m.cipherId] ?? m.cipherId,
     hint: m.hint === "" ? undefined : m.hint,
     date,
+    secretLine: secretLineFor(m.ciphertext),
   });
   return `<article class="wall-card" data-id="${escHtml(m.id)}">
       <div class="wall-seal">${seal}</div>
@@ -135,12 +202,39 @@ pinBtn.addEventListener("click", () => {
     state.mode === "encrypt" ? transform(text, info.id, keyEl.value, "encrypt") : text;
   void wallStore
     .add({ ciphertext, cipherId: info.id, hint: hintEl.value.trim() })
-    .then(() => renderWall())
+    .then(() => {
+      addArtifact();
+      return renderWall();
+    })
     .then(() => {
       document.querySelector(".wall")?.scrollIntoView({ behavior: "smooth" });
     });
 });
 
+skyBtn.addEventListener("click", () => {
+  try {
+    skyProfile = skyProfileFromBirth(birthDate.value);
+    errorEl.hidden = true;
+    renderSky();
+    render();
+  } catch (err) {
+    skyResult.innerHTML = "";
+    errorEl.hidden = false;
+    errorEl.textContent = err instanceof Error ? err.message : "Tarih okunamadı.";
+  }
+});
+
+skyResult.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement) || target.id !== "applySkyKey" || skyProfile === null) return;
+  state.cipher = skyProfile.cipherId;
+  keyEl.value = skyProfile.cipherKey;
+  hintEl.value = skyProfile.motto;
+  render();
+  inputEl.focus();
+});
+
+void renderLore();
 void renderWall();
 
 const state: { mode: Direction; cipher: CipherId } = {
@@ -215,6 +309,11 @@ function render(): void {
     cipherName: info.name,
     hint: hint === "" ? undefined : hint,
     date,
+    sky:
+      skyProfile === null
+        ? undefined
+        : { symbol: skyProfile.symbol, sign: skyProfile.sign, planet: skyProfile.planet },
+    secretLine: secretLineFor(`${artifactText}|${skyProfile?.sign ?? ""}`),
   });
   sealPreview.innerHTML = sealSvg;
 
@@ -276,15 +375,19 @@ function downloadBlob(data: BlobPart, filename: string, type: string): void {
 
 document.querySelector<HTMLButtonElement>("#dlSeal")!.addEventListener("click", () => {
   downloadBlob(sealSvg, "muhurhane-muhur.svg", "image/svg+xml;charset=utf-8");
+  addArtifact();
 });
 document.querySelector<HTMLButtonElement>("#dlStrip")!.addEventListener("click", () => {
   downloadBlob(stripSvg, "muhurhane-scytale-seridi.svg", "image/svg+xml;charset=utf-8");
+  addArtifact();
 });
 document.querySelector<HTMLButtonElement>("#dlDisk")!.addEventListener("click", () => {
   downloadBlob(diskSvg, "muhurhane-alberti-diski.svg", "image/svg+xml;charset=utf-8");
+  addArtifact();
 });
 document.querySelector<HTMLButtonElement>("#dlMidi")!.addEventListener("click", () => {
   downloadBlob(renderMidi(melody, currentBpm()), "muhurhane-melodi.mid", "audio/midi");
+  addArtifact();
 });
 document.querySelector<HTMLButtonElement>("#printBtn")!.addEventListener("click", () => {
   printArea.innerHTML = sealSvg + stripSvg + diskSvg;

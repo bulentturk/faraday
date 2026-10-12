@@ -21,6 +21,18 @@ describe("SVG üreticileri", () => {
     expect(svg).toContain("&amp;");
   });
 
+  it("burç simgesi ve gizli satır mühüre işlenir", () => {
+    const svg = renderSeal({
+      ciphertext: "SIR",
+      cipherName: "Vigenère",
+      sky: { symbol: "♏", sign: "Akrep", planet: "Plüton" },
+      secretLine: "Yıldızlar konuşur, ama fısıltıyla.",
+    });
+    expect(svg).toContain("♏");
+    expect(svg).toContain("AKREP · PLÜTON");
+    expect(svg).toContain("Yıldızlar konuşur, ama fısıltıyla.");
+  });
+
   it("scytale şeridi ve Alberti diski üretilir", () => {
     const strip = renderScytaleStrip("MERHABA", 3);
     expect(strip.startsWith("<svg")).toBe(true);

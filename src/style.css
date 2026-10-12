@@ -399,3 +399,83 @@ select:focus {
   color: var(--gold);
   word-break: break-word;
 }
+
+.sky,
+.lore {
+  grid-column: 1 / -1;
+}
+
+.sky-result {
+  margin-top: 16px;
+}
+
+.sky-card {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  background: #120e09;
+  border: 1px solid var(--panel-edge);
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.sky-symbol {
+  font-size: 56px;
+  line-height: 1;
+  color: var(--red);
+}
+
+.sky-info strong {
+  display: block;
+  font-size: 18px;
+  letter-spacing: 2px;
+  color: var(--gold);
+}
+
+.sky-info span {
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.sky-motto {
+  font-style: italic;
+  margin: 8px 0 12px;
+  color: var(--ink);
+}
+
+.lore-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.lore-fragment {
+  background: #120e09;
+  border: 1px solid var(--panel-edge);
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.lore-fragment h3 {
+  margin: 0 0 8px;
+  letter-spacing: 2px;
+  font-size: 15px;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.lore-fragment p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.lore-fragment.locked {
+  opacity: 0.55;
+}
+
+.lore-fragment.locked h3 {
+  color: var(--muted);
+}
